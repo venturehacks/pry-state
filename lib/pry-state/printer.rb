@@ -14,6 +14,8 @@ module PryState
     TRUNCATE = BoolParser.call(ENV['PRY_STATE_TRUNCATE'], true)
 
     def trunc_and_print var, value, var_color, value_color
+      # key = Pry::Helpers::Text.send colk, var
+      # value = Pry::Helpers::Text.send colv, @binding.eval(var.to_s)
       var_name_adjusted = var.to_s.ljust(LEFT_COLUMN_WIDTH)
       # Ensure at least 1 space between left and right columns
       left_column_text = truncate(var_name_adjusted, LEFT_COLUMN_WIDTH - 1) + ' '
@@ -22,13 +24,17 @@ module PryState
       print "\n"
     end
 
+
     private
+
+
     def truncate text, length
       if text.nil? then return end
       return text unless TRUNCATE
       l = length - "...".length
       (text.chars.to_a.size > length ? text.chars.to_a[0...l].join + "..." : text).to_s
     end
+
 
     def stringified_val_or_nil value, color, length
       value = stringify_value value
@@ -39,6 +45,7 @@ module PryState
         Pry::Helpers::Text.send(color, text)
       end
     end
+
 
     def stringify_value value
       if value.class == String

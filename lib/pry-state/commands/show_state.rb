@@ -1,20 +1,24 @@
-class PryState::ShowState < Pry::ClassCommand
-  match "show-state"
-  group "pry-state"
-  description "Show the current binding state."
+module PryState
+  class ShowState < Pry::ClassCommand
+    match "state-show"
+    group "State"
+    description "Show the current binding state."
 
-  def options(opt)
-    opt.banner unindent <<-USAGE
-      Usage: show-state
+    def options(opt)
+      opt.banner unindent <<-USAGE
+        Usage: state-show
 
-      show-state will show the current binding state.
+        show-state will show the current binding state.
 
-      Use `toggle-state` to turn on automatic state display.
-    USAGE
-  end
+        Use `state-toggle` to turn on automatic state display.
+      USAGE
+    end
 
-  def process
-    HookAction.new(target, _pry_).act(true)
+    def process
+      action = PryState::HookAction.new target, _pry_, config: _pry_.config.extra_sticky_locals[:pry_state]
+      action.process_visible!
+      action.print_lines
+    end
   end
 end
 

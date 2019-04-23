@@ -1,9 +1,7 @@
 PryState::Commands = Pry::CommandSet.new
 
-command_glob = File.expand_path('../commands/*.rb', __FILE__)
+require_relative "commands/show_state.rb"
+require_relative "commands/toggle_state.rb"
 
-Dir[command_glob].each do |command|
-  require command
-end
 
 Pry.commands.import PryState::Commands
