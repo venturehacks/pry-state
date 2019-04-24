@@ -1,5 +1,3 @@
-require_relative "printer.rb"
-
 module PryState
 
   class HookAction
@@ -12,6 +10,15 @@ module PryState
         intersection.each_with_object({}) do |k,combined|
           combined[k] = h1[k] if h1[k] == h2[k]
           combined
+        end
+      end
+
+
+      def run_hook output, binding, pry
+        action = PryState::HookAction.new binding, pry, config: pry.config.extra_sticky_locals[:pry_state]
+        action.process_visible!
+        action.each_line do |line|
+          output.puts line
         end
       end
     end
@@ -34,6 +41,7 @@ module PryState
     def initialize binding, pry, config:
       @binding, @pry = binding, pry
       @config = config
+      @format = "%-#{@config.left_column_width}s %-s"
     end
 
 
@@ -62,11 +70,32 @@ module PryState
     end
 
 
-    def print_lines
+    def each
+      return enum_for(:each) unless block_given?
       @data.each do |type,data|
+        yield type, data
+      end
+    end
+
+
+    def each_line
+      each do |type,data|
         colk, colv = *TYPES_AND_COLOURS[type]
-        data.each do |key, value|
-          eval_and_print key, value, var_color: colk, value_color: colv
+        data.each do |var, value|
+          format = @format
+          if value.nil?
+            value = "nil"
+            colk = "red"
+          else
+            value = stringify(value)
+            if @config.truncating? and value.size > @config.right_column_width
+              new_length = @config.right_column_width - 4
+              format = "#{@format.chop}#{new_length}.#{new_length}s..."
+            end
+          end
+          Pry::Helpers::Text.send(colk, stringify(value))
+          line = sprintf format, Pry::Helpers::Text.send(colk, var), value
+          yield line
         end
       end
     end
@@ -75,24 +104,25 @@ module PryState
     private
 
 
-    attr_reader :binding, :pry
-
-
-    def eval_and_print var, value, var_color: 'green', value_color: 'white'
-      # if value_changed? var, value
-      #   var_color = "bright_#{var_color}"; value_color = 'bright_yellow'
-      # end
-      PryState::Printer.trunc_and_print var, value, var_color, value_color
+    def stringify value
+      if value.respond_to? :chars
+        %Q!"#{value}"!
+      elsif value.respond_to? :push
+        "len:#{value.count} #{value.inspect}"
+      elsif value.respond_to? :to_s
+        value.to_s
+      else
+        value.inspect
+      end
     end
+
+
+
+    attr_reader :binding, :pry
 
 
     def value_changed? var, value
       prev_state[var] and prev_state[var] != value
-    end
-
-
-    def stick_value! var, value
-      prev_state[var] = value
     end
 
 

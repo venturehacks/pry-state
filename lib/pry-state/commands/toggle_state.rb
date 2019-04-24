@@ -2,7 +2,7 @@ module PryState
   class ToggleState < Pry::ClassCommand
     match "state-toggle"
     group "State"
-    description "Toggle automatic pry-State display."
+    description "Toggle automatic pry-state display."
 
     def options(opt)
       opt.banner unindent <<-USAGE

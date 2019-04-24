@@ -1,7 +1,6 @@
 require "rspec/given"
 require 'stringio'
 require 'pry'
-require 'pry-nav'
 
 
 RSpec.configure do |config|
