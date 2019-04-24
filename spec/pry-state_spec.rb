@@ -3,7 +3,9 @@ require_relative "../lib/pry-state.rb"
 
 describe "pry-state" do
   context "Set up" do
-    Given(:config) { Pry.config.extra_sticky_locals[:pry_state] }
+    Given(:pry_instance) { Pry.new }
+    Given(:config) { pry_instance.config.extra_sticky_locals[:pry_state] }
+    Given(:hooks) { pry_instance.hooks }
     Then { config.kind_of? PryState::Config }
     Then { !config.enabled? }
     Then {
@@ -16,5 +18,6 @@ describe "pry-state" do
     Then { config.right_column_width == PryState::Config::WIDTH - PryState::Config::LEFT_COLUMN_WIDTH }
     Then { !config.truncating? }
     Then { config.prev.empty? }
+    Then { hooks.hook_exists? :before_session,  :state_hook }
   end
 end
