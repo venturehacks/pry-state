@@ -24,34 +24,68 @@ describe "pry-state" do
     end
   end
 
-
-  context "Given a default set up" do
-    before(:each) do
-      @o = Object.new
-      class << @o
+  context "Output" do
+    Given(:obj) {
+      obj = Object.new
+      class << obj
         attr_accessor :first_method, :second_method, :third_method
       end
-      def @o.bing() bong end
-      def @o.bong() bang end
-      def @o.bang() Pry.start(binding) end
-    end
-    Given(:out) { StringIO.new }
-    When {
-      redirect_pry_io(
-        # The no color line is here because setting it in the config
-        # above seems to have no effect, so, that's why.
-        InputTester.new("_pry_.config.color = false",
-                        "state-show",
-                        "exit-all"),
-                        out
-                      ) do
-        @o.bing
-      end
+      def obj.bing() @x=12; bong end
+      def obj.bong() bang end
+      def obj.bang() Pry.start(binding) end
+      obj
     }
+    long_var = '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80]'
+    Given(:out) { StringIO.new }
+    context "Given a default set up" do
+      When {
+        redirect_pry_io(
+          # The no color line is here because setting it in the config
+          # above seems to have no effect, so, that's why.
+          InputTester.new("_pry_.config.color = false",
+                          "state-truncate off",
+                          "z = 14",
+                          "ys = #{long_var}",
+                          "state-show",
+                          "exit-all"),
+                          out
+                        ) do
+          obj.bing
+        end
+      }
 
-    Then { config.prev.kind_of? Hash }
-    Then { config.prev.keys == [:instance, :local] }
-    Then { out.string.include? "global: false instance: true local: true truncating?: false" }
+      Then { config.prev.kind_of? Hash }
+      Then { config.prev.keys == [:instance, :local] }
+      Then { out.string.include? "global: false instance: true local: true truncating?: false" }
+      Then { out.string.include? "@x        12" }
+      Then { out.string.include? "z         14" }
+      Then { out.string.include? "ys        len:80 #{long_var}" }
+    end
+    context "With the truncate on" do
+      When {
+        redirect_pry_io(
+          # The no color line is here because setting it in the config
+          # above seems to have no effect, so, that's why.
+          InputTester.new("_pry_.config.color = false",
+                          "state-truncate on",
+                          "z = 14",
+                          "ys = #{long_var}",
+                          "state-show",
+                          "exit-all"),
+                          out
+                        ) do
+          obj.bing
+        end
+      }
+
+      Then { config.prev.kind_of? Hash }
+      Then { config.prev.keys == [:instance, :local] }
+      Then { out.string.include? "global: false instance: true local: true truncating?: true" }
+      Then { out.string.include?  "@x        12" }
+      Then { out.string.include?  "z         14" }
+      Then { !out.string.include? "ys        len:80 #{long_var}" }
+      Then { out.string.include?  "ys        len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
+    end
   end
 
 end
