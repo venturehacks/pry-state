@@ -122,7 +122,7 @@ module PryState
 
 
     def value_changed? var, value
-      prev_state[var] and prev_state[var] != value
+      @config.prev[var] and @config.prev[var] != value
     end
 
 
