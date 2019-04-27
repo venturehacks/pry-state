@@ -48,7 +48,7 @@ def redirect_pry_io(new_in, new_out = StringIO.new)
   Pry.input = new_in
   Pry.output = new_out
   begin
-    yield
+    yield if block_given?
   ensure
     Pry.input = old_in
     Pry.output = old_out
