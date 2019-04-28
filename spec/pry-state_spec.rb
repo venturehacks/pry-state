@@ -110,6 +110,153 @@ describe "pry-state" do
       
       end
     end
+
+
+    context "Toggling globals" do
+      context "Globals are off by default" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "state-show",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { !out.string.include? "$PROCESS_ID"}
+      end
+      context "state-show g" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "state-show g",
+                            # turn it back off because too many warnings
+                            # pop up in the rest of the spec run otherwise
+                            "state-show g",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { out.string.include? "$PROCESS_ID"}
+      end
+    end
+
+    context "Toggling instance vars" do
+      context "Instance vars are on by default" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "state-show",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { out.string.include? "@x        12"}
+      end
+      context "state-show i" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "state-show i",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { !out.string.include? "@x        12"}
+      end
+    end
+
+    context "Toggling local vars" do
+      context "Local vars are on by default" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "z = 14",
+                            "state-show",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { out.string.include? "z         14"}
+      end
+      context "state-show i" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "z = 14",
+                            "state-show l",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { !out.string.include? "z         14"}
+      end
+    end
+
+
+    context "Toggling all" do
+      context "state-show a" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "z = 14",
+                            "state-show a",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { out.string.include? "$PROCESS_ID"}
+        Then { out.string.include?  "@x        12" }
+        Then { out.string.include? "z         14"}
+      end
+      context "state-show n" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "z = 14",
+                            # turn it back off because too many warnings
+                            # pop up in the rest of the spec run otherwise
+                            "state-show n",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { !out.string.include? "$PROCESS_ID"}
+        Then { !out.string.include? "@x        12" }
+        Then { !out.string.include? "z         14"}
+      end
+    end
   end
 
 end
