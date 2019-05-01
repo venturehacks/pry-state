@@ -164,7 +164,7 @@ describe "pry-state" do
         }
         Then { out.string.include? "@x        12"}
       end
-      context "state-show i" do
+      context "state-show i off" do
         When {
           redirect_pry_io(
             # The no color line is here because setting it in the config
@@ -178,6 +178,24 @@ describe "pry-state" do
           end
         }
         Then { !out.string.include? "@x        12"}
+      end
+      context "state-show i off then on" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "state-show i",
+                            "state-show i",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { out.string.include? "@x        12"}
+        And  { out.string.include? "instance: false" }
+        And  { out.string.include? "instance: true" }
       end
     end
 
@@ -197,22 +215,46 @@ describe "pry-state" do
           end
         }
         Then { out.string.include? "z         14"}
+        And  { out.string.include? "local: true" }
       end
-      context "state-show i" do
-        When {
-          redirect_pry_io(
-            # The no color line is here because setting it in the config
-            # above seems to have no effect, so, that's why.
-            InputTester.new("_pry_.config.color = false",
-                            "z = 14",
-                            "state-show l",
-                            "exit-all"),
-                            out
-                          ) do
-            obj.bing
-          end
-        }
-        Then { !out.string.include? "z         14"}
+      context "state-show l" do
+        context "Locals off then on" do
+          When {
+            redirect_pry_io(
+              # The no color line is here because setting it in the config
+              # above seems to have no effect, so, that's why.
+              InputTester.new("_pry_.config.color = false",
+                              "z = 14",
+                              "state-show l",
+                              "state-show l",
+                              "exit-all"),
+                              out
+                            ) do
+              obj.bing
+            end
+          }
+          Then { out.string.include? "z         14"}
+          And  { out.string.include? "local: false" }
+          And  { out.string.include? "local: true" }
+        end
+        context "Locals off" do
+          When {
+            redirect_pry_io(
+              # The no color line is here because setting it in the config
+              # above seems to have no effect, so, that's why.
+              InputTester.new("_pry_.config.color = false",
+                              "z = 14",
+                              "state-show l",
+                              "exit-all"),
+                              out
+                            ) do
+              obj.bing
+            end
+          }
+          Then { !out.string.include? "z         14"}
+          And  { out.string.include? "local: false"}
+          And  { !out.string.include? "local: true" }
+        end
       end
     end
 
@@ -233,8 +275,9 @@ describe "pry-state" do
           end
         }
         Then { out.string.include? "$PROCESS_ID"}
-        Then { out.string.include?  "@x        12" }
-        Then { out.string.include? "z         14"}
+        And  { out.string.include?  "@x        12" }
+        And { out.string.include? "z         14"}
+        And { out.string.include? "global: true instance: true local: true truncating?: false"}
       end
       context "state-show n" do
         When {
@@ -255,6 +298,7 @@ describe "pry-state" do
         Then { !out.string.include? "$PROCESS_ID"}
         Then { !out.string.include? "@x        12" }
         Then { !out.string.include? "z         14"}
+        And { out.string.include? "global: false instance: false local: false truncating?: false" }
       end
     end
   end
