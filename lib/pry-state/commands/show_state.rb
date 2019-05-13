@@ -56,8 +56,8 @@ module PryState
           state-show a # show all available groups
           state-show n # hide these foul things that make life hard!
 
-        To keep showing the state automatically then use `state-show on`
-        or `state-toggle`. To turn it off use `state-show off`.
+        To keep showing the state automatically then use `state-show on`.
+        To turn it off use `state-show off`.
       USAGE
     end
 
