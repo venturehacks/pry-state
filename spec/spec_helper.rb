@@ -4,6 +4,16 @@ require 'pry'
 require 'pathname'
 require 'pry/testable'
 
+# code coverage
+require 'simplecov'
+SimpleCov.start do
+  add_filter "/vendor/"
+  add_filter "/vendor.noindex/"
+  add_filter "/bin/"
+  add_filter "/spec/"
+  add_filter "/coverage/"
+end
+
 Pathname(__dir__).join("support").glob "**/*.rb" do |rb|
   require rb
 end

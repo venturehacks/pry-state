@@ -14,4 +14,5 @@ group :development do
   gem "pry-byebug"
   gem "rb-readline"
   gem "awesome_print"
+  gem "simplecov"
 end
