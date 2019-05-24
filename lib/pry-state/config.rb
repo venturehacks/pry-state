@@ -17,29 +17,29 @@ module PryState
     }.freeze
 
 
-    def initialize config=nil
+    def initialize enabled=false, truncate: false
       @groups_visibility = DEFAULT_GROUPS_VISIBILITY.dup
       @vars_visibility   = {}
-      @prev = {}
-      @enabled = !!config&.state_hook_enabled
-
+      @enabled = !!enabled
       @width = WIDTH
       @max_left_column_width = MAX_LEFT_COLUMN_WIDTH
       @column_ratio = COLUMN_RATIO
       @left_column_width =
         [ ( @width / (@column_ratio + 1) ).floor, @max_left_column_width ].min
       @right_column_width = @width - @left_column_width
-      @truncate_enabled = !!config&.state_truncate_enabled
+      @format = "%-#{@left_column_width}s %-s"
+      @truncate_enabled = !!truncate
+      @prev = {}
     end
 
-    attr_reader :width, :max_left_column_width, :column_ratio, :left_column_width, :right_column_width
+    attr_reader :width, :max_left_column_width, :column_ratio, :left_column_width, :right_column_width, :format, :prev
 
     attr_reader :groups_visibility
-    attr_accessor :prev, :enabled, :truncate_enabled
+    attr_accessor :enabled, :truncate_enabled
 
 
     def enabled?
-      @enabled
+      !!@enabled
     end
 
 

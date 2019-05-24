@@ -62,7 +62,7 @@ module PryState
     end
 
     def process
-      config = _pry_.config.extra_sticky_locals[:pry_state]
+      config = _pry_.config.state_config
       run_it = false
       case captures.first
         when "g"
@@ -74,12 +74,12 @@ module PryState
         when "l"
           config.toggle_group_visibility "local"
           run_it = true
-        when "a"
+        when "a" # all
           config.groups_visibility[:global]    = true
           config.groups_visibility[:instance]  = true
           config.groups_visibility[:local]     = true
           run_it = true
-        when "n"
+        when "n" # none
           config.groups_visibility[:global]    = false
           config.groups_visibility[:instance]  = false
           config.groups_visibility[:local]     = false
@@ -91,9 +91,8 @@ module PryState
         else # just show it
           run_it = true
       end
-      output.puts config.status
       if run_it
-        PryState::HookAction.run_hook output, target, _pry_
+        PryState::Hook.run_hook output, target, _pry_
       end
     end
 

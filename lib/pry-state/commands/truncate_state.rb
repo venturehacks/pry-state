@@ -23,7 +23,7 @@ module PryState
 
 
     def process
-      config = _pry_.config.extra_sticky_locals[:pry_state]
+      config = _pry_.config.state_config
 
       case captures.first
         when "on"

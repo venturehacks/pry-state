@@ -30,4 +30,8 @@ RSpec.configure do |config|
   config.include Pry::Testable::Utility
   include Pry::Testable::Evalable
   include Pry::Testable::Variables
+  
+  config.before(:suite) do
+    Pry.hooks.delete_hook(:before_session, :state_hook)
+  end
 end
