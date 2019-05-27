@@ -1,3 +1,5 @@
+require 'set'
+
 module PryState
 
   class Hook
@@ -61,6 +63,7 @@ module PryState
         @binding  = _binding
         @pry      = pry
         @config   = pry.config.state_config
+        @format = "%-#{@config.left_column_width}s %-s"
       end
 
 
@@ -100,7 +103,7 @@ module PryState
         each do |type,data|
           colk, colv = *TYPES_AND_COLOURS[type]
           data.each do |var, value|
-            format = @config.format
+            val_format = "%-s"
             if value.nil?
               value = "nil"
               colk = "red"
@@ -108,11 +111,12 @@ module PryState
               value = stringify(value)
               if @config.truncating? and value.size > @config.right_column_width
                 new_length = @config.right_column_width - 4
-                format = "#{format.chop}#{new_length}.#{new_length}s..."
+                val_format = "%-#{new_length}.#{new_length}s..."
               end
             end
-            Pry::Helpers::Text.send(colk, stringify(value))
-            line = sprintf format, Pry::Helpers::Text.send(colk, var), value
+            left = Pry::Helpers::Text.send(colk, var)
+            left_diff = left.length - var.length
+            line = sprintf "%-#{@config.left_column_width + left_diff}s #{val_format}", left, value
             yield line
           end
         end

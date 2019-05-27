@@ -85,9 +85,9 @@ describe "pry-state" do
         Then { config.prev.kind_of? Hash }
         And  { config.prev.keys == [:instance, :local] }
         And  { out.string.include? "global: false instance: true local: true truncating?: false" }
-        And  { out.string.include? "@x        12" }
-        And  { out.string.include? "z         14" }
-        And  { out.string.include? "ys        len:80 #{long_var}" }
+        And  { out.string.include? "@x                   12" }
+        And  { out.string.include? "z                    14" }
+        And  { out.string.include? "ys                   len:80 #{long_var}" }
       end
       context "With the truncate on" do
         When {
@@ -109,10 +109,10 @@ describe "pry-state" do
         Then { config.prev.kind_of? Hash }
         And  { config.prev.keys == [:instance, :local] }
         And  { out.string.include? "global: false instance: true local: true truncating?: true" }
-        And  { out.string.include?  "@x        12" }
-        And  { out.string.include?  "z         14" }
-        And  { !out.string.include? "ys        len:80 #{long_var}" }
-        And  { out.string.include?  "ys        len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
+        And  { out.string.include?  "@x                   12" }
+        And  { out.string.include?  "z                    14" }
+        And  { !out.string.include? "ys                   len:80 #{long_var}" }
+        And  { out.string.include?  "ys                   len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
       end
       context "truncate on then truncate off" do
         When {
@@ -132,8 +132,8 @@ describe "pry-state" do
             obj.bing
           end
         }
-        Then { out.string.include?  "ys        len:80 #{long_var}" }
-        And  { out.string.include?  "ys        len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
+        Then { out.string.include?  "ys                   len:80 #{long_var}" }
+        And  { out.string.include?  "ys                   len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
       
       end
     end
@@ -189,7 +189,7 @@ describe "pry-state" do
             obj.bing
           end
         }
-        Then { out.string.include? "@x        12"}
+        Then { out.string.include? "@x                   12"}
       end
       context "state-show i off" do
         When {
@@ -204,7 +204,7 @@ describe "pry-state" do
             obj.bing
           end
         }
-        Then { !out.string.include? "@x        12"}
+        Then { !out.string.include? "@x                   12"}
       end
       context "state-show i off then on" do
         When {
@@ -220,7 +220,7 @@ describe "pry-state" do
             obj.bing
           end
         }
-        Then { out.string.include? "@x        12"}
+        Then { out.string.include? "@x                   12"}
         And  { out.string.include? "instance: false" }
         And  { out.string.include? "instance: true" }
       end
@@ -241,7 +241,7 @@ describe "pry-state" do
             obj.bing
           end
         }
-        Then { out.string.include? "z         14"}
+        Then { out.string.include? "z                    14"}
         And  { out.string.include? "local: true" }
       end
       context "state-show l" do
@@ -260,7 +260,7 @@ describe "pry-state" do
               obj.bing
             end
           }
-          Then { out.string.include? "z         14"}
+          Then { out.string.include? "z                    14"}
           And  { out.string.include? "local: false" }
           And  { out.string.include? "local: true" }
         end
@@ -278,7 +278,7 @@ describe "pry-state" do
               obj.bing
             end
           }
-          Then { !out.string.include? "z         14"}
+          Then { !out.string.include? "z                    14"}
           And  { out.string.include? "local: false"}
           And  { !out.string.include? "local: true" }
         end
@@ -302,8 +302,8 @@ describe "pry-state" do
           end
         }
         Then { out.string.include? "$PROCESS_ID"}
-        And  { out.string.include?  "@x        12" }
-        And  { out.string.include? "z         14"}
+        And  { out.string.include? "@x                   12" }
+        And  { out.string.include? "z                    14"}
         And  { out.string.include? "global: true instance: true local: true truncating?: false"}
       end
       context "state-show n" do
@@ -322,8 +322,8 @@ describe "pry-state" do
           end
         }
         Then { !out.string.include? "$PROCESS_ID"}
-        And  { !out.string.include? "@x        12" }
-        And  { !out.string.include? "z         14"}
+        And  { !out.string.include? "@x                   12" }
+        And  { !out.string.include? "z                    14"}
         And  { out.string.include? "global: false instance: false local: false truncating?: false" }
         after do
           Pry.config.state_config = PryState::Config.new( 
@@ -352,7 +352,7 @@ describe "pry-state" do
           end
         }
         Then { !out.string.include? "$PROCESS_ID"}
-        Then { !out.string.include? "z         14"}
+        Then { !out.string.include? "z                    14"}
         Then { !out.string.include? "global:"}
         Then { !out.string.include? "instance:"}
         Then { !out.string.include? "local:"}
@@ -376,7 +376,7 @@ describe "pry-state" do
           end
         }
         Then { out.string.include? "global: false instance: true local: true truncating?: false"}
-        #And  { out.string.include? "z         14"}
+        #And  { out.string.include? "z                    14"}
         Then {  out.string.include? "enabled? true" }
       end
 

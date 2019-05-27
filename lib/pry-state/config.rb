@@ -27,12 +27,11 @@ module PryState
       @left_column_width =
         [ ( @width / (@column_ratio + 1) ).floor, @max_left_column_width ].min
       @right_column_width = @width - @left_column_width
-      @format = "%-#{@left_column_width}s %-s"
       @truncate_enabled = !!truncate
       @prev = {}
     end
 
-    attr_reader :width, :max_left_column_width, :column_ratio, :left_column_width, :right_column_width, :format, :prev
+    attr_reader :width, :max_left_column_width, :column_ratio, :left_column_width, :right_column_width, :prev
 
     attr_reader :groups_visibility
     attr_accessor :enabled, :truncate_enabled
@@ -88,7 +87,7 @@ module PryState
       }
       colour = truncating? ? "cyan" : "magenta"
       statuses << "#{Pry::Helpers::Text.yellow("truncating?")}: #{Pry::Helpers::Text.send colour, truncating?}"
-      "  " << statuses.join(" ")
+      "State__  " << statuses.join(" ")
     end
   end
 
