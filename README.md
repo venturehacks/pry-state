@@ -25,16 +25,15 @@ Or install it yourself as:
 
 ## Usage
 
-You can activate pry-state on the current binding with the command `show-state`. You can also toggle displaying the state at each binding change event with `toggle-state`. This is useful for debugging, such as with [pry-byebug](https://github.com/deivid-rodriguez/pry-byebug).
+`state-show` is the main command. To learn more (and I suggest you do) use `help state`.
 
 You can turn on the state display as the default by adding this to your `.pryrc`:
 
 `Pry.config.state_hook_enabled = true`
 
-## Customisation
+To turn on truncation of long variables by default, add this to the `.pryrc`:
 
-You can use environment variables `SHOW_GLOBAL_VARIABLES`, `HIDE_INSTANCE_VARIABLES` and `HIDE_LOCAL_VARIABLES` to customise the kind of variables shown.
-
+    Pry.config.state_truncate_enabled = true
 
 ## Development
 
@@ -42,10 +41,6 @@ After checking out the repo, run `bin/setup` to install dependencies. Then, run 
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release` to create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
-## Roadmap
-
-1. Indicate the CHANGE in value between pry sessions by different color. [DONE]
-2. Associate the variables with numbers, and support command to evaluate the variable through these numbers. eg. command 's1' will show the value of first variable and so on.
 
 ## Contributing
 
