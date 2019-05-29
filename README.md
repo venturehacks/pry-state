@@ -29,17 +29,11 @@ Or install it yourself as:
 
 You can turn on the state display as the default by adding this to your `.pryrc`:
 
-`Pry.config.state_hook = true`
+    Pry.config.state_hook = true
 
 To turn on truncation of long variables by default, add this to the `.pryrc`:
 
     Pry.config.state_truncate = true
-
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release` to create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 
 ## Contributing
