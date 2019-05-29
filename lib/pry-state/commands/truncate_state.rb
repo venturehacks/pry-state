@@ -1,6 +1,6 @@
 module PryState
   class TruncateState < Pry::ClassCommand
-    match /^state-truncate\s*(o(?:(?:n)|(?:ff))){0,1}$/
+    match /^ state-truncate (?:\s* ( (?:\$|@@?)? \w\w* ))? $/x
     options listing: "state-truncate"
     group "State"
     description "Truncate pry-State display."
@@ -10,12 +10,10 @@ module PryState
         Usage: state-truncate
 
         `state-truncate` will toggle the truncation of state display.
-        `state-truncate on` will set it to on.
-        `state-truncate off` will set it to off.
-        Default is "on".
+        `state-truncate NAME-OF-VARIABLE` will toggle the truncation of a variable.
         
-        Set `Pry.config.state_truncate_enabled = false` in your .pryrc file to
-        disable it from start up.
+        Set `Pry.config.state_truncate = true` in your .pryrc file to
+        enable it from start up.
 
         Use `state-show` to show the current state.
       USAGE
@@ -24,15 +22,22 @@ module PryState
 
     def process
       config = _pry_.config.state_config
-
-      case captures.first
-        when "on"
-          config.truncate_enabled = true
-        when "off"
-          config.truncate_enabled = false
+      if captures.first.nil? or captures.first.empty?
+        config.truncate_enabled = !config.truncating?
+      else
+        sym = captures.first.to_sym
+        if config.truncate_exceptions.has_key? sym
+          config.truncate_exceptions[sym] = 
+            config.truncate_exceptions[sym] == :truncate ?
+              :normal :
+              :truncate
         else
-          config.truncate_enabled ^= true
+          config.truncate_exceptions[sym] = config.truncating? ?
+            :normal :
+            :truncate
+        end
       end
+
       if config.truncating?
         output.puts "Truncation of state display enabled."
       else

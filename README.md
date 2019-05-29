@@ -29,11 +29,11 @@ Or install it yourself as:
 
 You can turn on the state display as the default by adding this to your `.pryrc`:
 
-`Pry.config.state_hook_enabled = true`
+`Pry.config.state_hook = true`
 
 To turn on truncation of long variables by default, add this to the `.pryrc`:
 
-    Pry.config.state_truncate_enabled = true
+    Pry.config.state_truncate = true
 
 ## Development
 

@@ -43,8 +43,8 @@ module PryState
 
     def initialize
       Pry.config.state_config = PryState::Config.new( 
-        Pry.config.state_hook_enabled,
-        truncate: Pry.config.state_truncate_enabled
+        Pry.config.state_hook,
+        truncate: Pry.config.state_truncate
       )
     end
 
@@ -109,7 +109,8 @@ module PryState
               colk = "red"
             else
               value = stringify(value)
-              if @config.truncating? and value.size > @config.right_column_width
+              
+              if it_should_be_truncated? var, value
                 new_length = @config.right_column_width - 4
                 val_format = "%-#{new_length}.#{new_length}s..."
               end
@@ -124,6 +125,25 @@ module PryState
 
 
       private
+
+
+      def it_should_be_truncated? var, value
+        # first because it's better than checking every length
+        if @config.truncate_exceptions.has_key?(var.to_sym)
+          if @config.truncate_exceptions[var.to_sym] == :truncate
+            if value.size > @config.right_column_width
+              return true
+            end
+          end
+          return false
+        end
+
+        if @config.truncating? and value.size > @config.right_column_width
+          return true
+        else
+          false
+        end
+      end
 
 
       def stringify value

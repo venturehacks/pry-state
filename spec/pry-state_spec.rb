@@ -15,33 +15,33 @@ describe "pry-state" do
         Pry.hooks.delete_hook(:before_session, :state_hook)
       end
       Then { config.kind_of? PryState::Config }
-      Then { !config.enabled? }
-      Then {
+      And  { !config.enabled? }
+      And  {
         config.groups_visibility == PryState::Config::DEFAULT_GROUPS_VISIBILITY
       }
-      Then { config.width == PryState::Config::WIDTH }
-      Then { config.max_left_column_width == PryState::Config::MAX_LEFT_COLUMN_WIDTH }
-      Then { config.column_ratio == PryState::Config::COLUMN_RATIO }
-      Then { config.left_column_width == PryState::Config::LEFT_COLUMN_WIDTH }
-      Then { config.right_column_width == PryState::Config::WIDTH - PryState::Config::LEFT_COLUMN_WIDTH }
-      Then { !config.truncating? }
-      Then { config.prev == {} }
-      Then { Pry.hooks.hook_exists? :before_session,  :state_hook }
+      And  { config.width == PryState::Config::WIDTH }
+      And  { config.max_left_column_width == PryState::Config::MAX_LEFT_COLUMN_WIDTH }
+      And  { config.column_ratio == PryState::Config::COLUMN_RATIO }
+      And  { config.left_column_width == PryState::Config::LEFT_COLUMN_WIDTH }
+      And  { config.right_column_width == PryState::Config::WIDTH - PryState::Config::LEFT_COLUMN_WIDTH }
+      And  { !config.truncating? }
+      And  { config.prev == {} }
+      And  { Pry.hooks.hook_exists? :before_session,  :state_hook }
     end
 
     context "Enabled" do
       before do
-        Pry.config.state_hook_enabled = true
+        Pry.config.state_hook = true
         Pry.hooks.add_hook(:before_session, :state_hook, PryState::Hook.new)
       end
       after do
         Pry.hooks.delete_hook(:before_session, :state_hook)
-        Pry.config.state_hook_enabled = false
+        Pry.config.state_hook = false
       end
-      Then  { Pry.config.state_hook_enabled }
-      And  { Pry.config.state_hook_enabled.kind_of? TrueClass }
-      And  { pry_instance.config.state_hook_enabled }
-      And  { pry_instance.config.state_hook_enabled.kind_of? TrueClass }
+      Then  { Pry.config.state_hook }
+      And  { Pry.config.state_hook.kind_of? TrueClass }
+      And  { pry_instance.config.state_hook }
+      And  { pry_instance.config.state_hook.kind_of? TrueClass }
       And  { config.kind_of? PryState::Config }
       And  { config.respond_to? :enabled? }
       And  { pry_instance.config.state_config.kind_of? PryState::Config }
@@ -89,13 +89,13 @@ describe "pry-state" do
         And  { out.string.include? "z                    14" }
         And  { out.string.include? "ys                   len:80 #{long_var}" }
       end
-      context "With the truncate on" do
+      context "Toggle truncate on" do
         When {
           redirect_pry_io(
             # The no color line is here because setting it in the config
             # above seems to have no effect, so, that's why.
             InputTester.new("_pry_.config.color = false",
-                            "state-truncate on",
+                            "state-truncate",
                             "z = 14",
                             "ys = #{long_var}",
                             "state-show",
@@ -114,17 +114,17 @@ describe "pry-state" do
         And  { !out.string.include? "ys                   len:80 #{long_var}" }
         And  { out.string.include?  "ys                   len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
       end
-      context "truncate on then truncate off" do
+      context "Toggle truncate on then truncate off" do
         When {
           redirect_pry_io(
             # The no color line is here because setting it in the config
             # above seems to have no effect, so, that's why.
             InputTester.new("_pry_.config.color = false",
-                            "state-truncate on",
+                            "state-truncate",
                             "z = 14",
                             "ys = #{long_var}",
                             "state-show",
-                            "state-truncate off",
+                            "state-truncate",
                             "state-show",
                             "exit-all"),
                             out
@@ -135,6 +135,63 @@ describe "pry-state" do
         Then { out.string.include?  "ys                   len:80 #{long_var}" }
         And  { out.string.include?  "ys                   len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
       
+      end
+      context "Make an exception to truncate" do
+        context "Truncate on, for xs should be off" do
+          When {
+            redirect_pry_io(
+              # The no color line is here because setting it in the config
+              # above seems to have no effect, so, that's why.
+              InputTester.new("_pry_.config.color = false",
+                              "z = 14",
+                              "state-truncate", # on
+                              "ys = #{long_var}",
+                              "xs = #{long_var}",
+                              "state-truncate xs",
+                              "state-show",
+                              "exit-all"),
+                              out
+                            ) do
+              obj.bing
+            end
+          }
+
+          Then { out.string.include? "xs                   len:80 #{long_var}" }  
+          And { out.string.include? "ys                   len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
+          And  { config.prev.kind_of? Hash }
+          And  { config.prev.keys == [:instance, :local] }
+          And  { out.string.include? "global: false instance: true local: true truncating?: true" }
+          And  { out.string.include? "@x                   12" }
+          And  { out.string.include? "z                    14" }
+        end
+        context "Truncate off, for xs should be on" do
+          When {
+            redirect_pry_io(
+              # The no color line is here because setting it in the config
+              # above seems to have no effect, so, that's why.
+              InputTester.new("_pry_.config.color = false",
+                              "z = 14",
+                              "state-truncate", # on
+                              "state-truncate", # off
+                              "ys = #{long_var}",
+                              "xs = #{long_var}",
+                              "state-truncate xs",
+                              "state-show",
+                              "exit-all"),
+                              out
+                            ) do
+              obj.bing
+            end
+          }
+          Then { out.string.include? "xs                   len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
+          And  { out.string.include? "ys                   len:80 #{long_var}" }
+
+          And  { config.prev.kind_of? Hash }
+          And  { config.prev.keys == [:instance, :local] }
+          And  { out.string.include? "global: false instance: true local: true truncating?: false" }
+          And  { out.string.include? "@x                   12" }
+          And  { out.string.include? "z                    14" }  
+        end
       end
     end
 
@@ -327,8 +384,8 @@ describe "pry-state" do
         And  { out.string.include? "global: false instance: false local: false truncating?: false" }
         after do
           Pry.config.state_config = PryState::Config.new( 
-            Pry.config.state_hook_enabled,
-            truncate: Pry.config.state_truncate_enabled
+            Pry.config.state_hook,
+            truncate: Pry.config.state_truncate
           )
         end
       end
@@ -352,12 +409,12 @@ describe "pry-state" do
           end
         }
         Then { !out.string.include? "$PROCESS_ID"}
-        Then { !out.string.include? "z                    14"}
-        Then { !out.string.include? "global:"}
-        Then { !out.string.include? "instance:"}
-        Then { !out.string.include? "local:"}
-        Then { !out.string.include? "truncating?:"}
-        Then {  out.string.include? "enabled? false" }
+        And  { !out.string.include? "z                    14"}
+        And  { !out.string.include? "global:"}
+        And  { !out.string.include? "instance:"}
+        And  { !out.string.include? "local:"}
+        And  { !out.string.include? "truncating?:"}
+        And  {  out.string.include? "enabled? false" }
       end
       context "state-show on" do
         When {
@@ -377,7 +434,7 @@ describe "pry-state" do
         }
         Then { out.string.include? "global: false instance: true local: true truncating?: false"}
         #And  { out.string.include? "z                    14"}
-        Then {  out.string.include? "enabled? true" }
+        And  {  out.string.include? "enabled? true" }
       end
 
     end
