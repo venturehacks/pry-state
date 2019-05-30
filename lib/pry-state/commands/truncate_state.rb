@@ -1,6 +1,8 @@
+require_relative "../patterns.rb"
+
 module PryState
   class TruncateState < Pry::ClassCommand
-    match /^ state-truncate (?:\s* ( (?:\$|@@?)? \w\w* ))? $/x
+    match /^ state-truncate (?:\s* ( #{Patterns::VARIABLE_PATTERN} ))? $/x
     options listing: "state-truncate"
     group "State"
     description "Truncate pry-State display."

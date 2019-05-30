@@ -1,3 +1,5 @@
+require_relative "../patterns.rb"
+
 module PryState
   class ShowState < Pry::ClassCommand
     match /^
@@ -17,6 +19,10 @@ module PryState
               (?: on )
                 |
               (?: off )
+                |
+              (?: hidden )
+                |
+              (?: #{Patterns::VARIABLE_PATTERN} )
             ){0,1}
           $/x
 
@@ -63,33 +69,34 @@ module PryState
 
     def process
       config = _pry_.config.state_config
-      run_it = false
+      run_it = true
       case captures.first
         when "g"
           config.toggle_group_visibility "global"
-          run_it = true
         when "i"
           config.toggle_group_visibility "instance"
-          run_it = true
         when "l"
           config.toggle_group_visibility "local"
-          run_it = true
         when "a" # all
           config.groups_visibility[:global]    = true
           config.groups_visibility[:instance]  = true
           config.groups_visibility[:local]     = true
-          run_it = true
         when "n" # none
           config.groups_visibility[:global]    = false
           config.groups_visibility[:instance]  = false
           config.groups_visibility[:local]     = false
         when "on"
           config.enabled = true
-          run_it = true
         when "off"
           config.enabled = false
-        else # just show it
-          run_it = true
+          run_it = false
+        when "hidden"
+          # show all hidden
+        when nil
+          # don't remove this or the else is hit when it
+          # shouldn't be
+        else
+          config.toggle_var_visibility captures.first
       end
       if run_it
         PryState::Hook.run_hook output, target, _pry_

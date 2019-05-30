@@ -18,9 +18,20 @@ module PryState
     }.freeze
 
 
+    TYPES_AND_COLOURS = {
+      :global   =>  %w{white yellow},
+      :instance =>  %w{green white},
+      :local    =>  %w{cyan white},
+    }.freeze
+
+
     def initialize enabled=nil, truncate:
       @groups_visibility = DEFAULT_GROUPS_VISIBILITY.dup
-      @vars_visibility   = {}
+      @vars_visibility   = {
+        :global   => {},
+        :instance => {},
+        :local    => {}
+      }
       @enabled = enabled.nil? ?
         !!Pry.config.state_hook :
         !!enabled
@@ -39,7 +50,7 @@ module PryState
 
     attr_reader :width, :max_left_column_width, :column_ratio, :left_column_width, :right_column_width, :prev
 
-    attr_reader :groups_visibility, :truncate_exceptions
+    attr_reader :groups_visibility, :truncate_exceptions, :vars_visibility
     attr_accessor :enabled
     attr_writer :truncate_enabled
 
@@ -55,34 +66,32 @@ module PryState
 
 
     def toggle_group_visibility name
-      @groups_visibility[name.to_sym] ^= true
+      @groups_visibility[name.to_sym] = !@groups_visibility[name.to_sym]
     end
 
 
     def toggle_var_visibility name
-      @vars_visibility[name.to_sym] ^= true
-    end
-
-
-    def groups
-      @groups_visibility.keys
-    end
-
-
-    def vars
-      @vars_visibility.keys
+      name = name.to_sym
+      type = 
+        case name.to_s
+        when /^\$/
+          :global
+        when /^@/
+          :instance
+        else
+          :local
+        end
+      if @vars_visibility[type].has_key? name
+        @vars_visibility[type][name] = !@vars_visibility[type][name]
+      else
+        @vars_visibility[type][name] = !group_visible?(type)
+      end
     end
 
 
     def group_visible? name
       name = name.to_sym
       @groups_visibility.has_key?(name) && @groups_visibility[name]
-    end
-
-
-    def var_visible? name
-      name = name.to_sym
-      @vars_visibility.has_key?(name) && @vars_visibility[name]
     end
 
 
@@ -98,11 +107,5 @@ module PryState
     end
   end
 
-  
-  class << self
-    def Config config=nil
-      PryState::Config.new config
-    end
-  end
 
 end

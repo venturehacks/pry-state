@@ -438,6 +438,58 @@ describe "pry-state" do
       end
 
     end
+
+
+    context "Toggling vars directly" do
+      after do
+        config.vars_visibility.each do |k,v|
+          v.clear
+        end
+      end
+
+      context "Hiding" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "z = 14",
+                            "y = 10",
+                            "state-show z", # hide z
+                            "state-show",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { !out.string.include? "z                    14"}
+        And  { out.string.include?  "y                    10" }
+        And  { out.string.include? "@x                   12" }
+      end
+
+      context "Showing" do
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "z = 14",
+                            "y = 10",
+                            "state-show z", # show z
+                            "state-show l",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+        Then { !out.string.include? "z                    14"}
+        And  { out.string.include?  "y                    10" }
+        And  { out.string.include? "@x                   12" }
+      end
+
+    end
   end
 
 end

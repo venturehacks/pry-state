@@ -4,16 +4,6 @@ module PryState
 
   class Hook
     class << self
-    
-      def find_changed h1, h2
-        s1 = Set.new h1.keys
-        s2 = Set.new h2.keys
-        intersection = s1 & s2 
-        intersection.each_with_object({}) do |k,combined|
-          combined[k] = h1[k] if h1[k] == h2[k]
-          combined
-        end
-      end
 
 
       def run_hook output, binding, pry
@@ -32,13 +22,7 @@ module PryState
     CONTROLLER_INSTANCE_VARIABLES = [:@_request, :@_response, :@_routes]
     RSPEC_INSTANCE_VARIABLES = [:@__inspect_output, :@__memoized]
     IGNORABLE_INSTANCE_VARS = CONTROLLER_INSTANCE_VARIABLES + RSPEC_INSTANCE_VARIABLES
-    IGNORABLE_GLOBAL_VARS = [:$@]
-
-    TYPES_AND_COLOURS = {
-      :global   =>  %w{white yellow},
-      :instance =>  %w{green white},
-      :local    =>  %w{cyan white},
-    }
+    IGNORABLE_GLOBAL_VARS = [:$@, :$-I, :"$\"", :$LOAD_PATH, :$KCODE, :$=, :$LOADED_FEATURES, :$:]
 
 
     def initialize
@@ -47,7 +31,6 @@ module PryState
         truncate: Pry.config.state_truncate
       )
     end
-
 
 
     def call( output, binding, pry )
@@ -67,23 +50,43 @@ module PryState
       end
 
 
+      # group visible | var visible |
+      #     t         |     f       |   f   delete
+      #     f         |     t       |   t   replace
       def check_state type
-        vars = Set.new @binding.eval("#{type}_variables")
-        if PryState::Hook.const_defined? "IGNORABLE_#{type.upcase}_VARS"
-          vars -= PryState::Hook.const_get("IGNORABLE_#{type.upcase}_VARS")
+        vs = @binding.eval("#{type}_variables")
+        const = "IGNORABLE_#{type.upcase}_VARS"
+        if PryState::Hook.const_defined? const
+          vs -= PryState::Hook.const_get const
+        end
+        if !@config.vars_visibility[type].empty?
+          if @config.group_visible? type
+            finders = @config.vars_visibility[type].select{|_,v| v == false }.keys
+            finders.each do |fdr|
+              vs.delete(fdr) if vs.include? fdr
+            end
+          else
+            vs.replace @config.vars_visibility[type].select{|_,v| v }.keys
+          end
         end
         Hash[
-          vars.map { |var|
-            [var,@binding.eval(var.to_s)]
+          vs.map { |var|
+            [ var, @binding.eval(var.to_s) ]
           }
         ]
       end
 
 
+      # group visible | var maybe (!empty?)
+      #     t         |     t       |     t
+      #     t         |     f       |     t
+      #     f         |     t       |     t
+      #     f         |	    f       |     f
       def process_visible!
         @data = {}
-        TYPES_AND_COLOURS.keys.each_with_object(@data) do |type, data|
-          next unless @config.group_visible? type
+        Config::TYPES_AND_COLOURS.keys.each_with_object(@data) do |type, data|
+          next unless @config.group_visible? type or
+                      !@config.vars_visibility[type].empty?
           data[type] = check_state type
         end
         @data.freeze
@@ -101,7 +104,7 @@ module PryState
 
       def each_line
         each do |type,data|
-          colk, colv = *TYPES_AND_COLOURS[type]
+          colk, colv = *Config::TYPES_AND_COLOURS[type]
           data.each do |var, value|
             val_format = "%-s"
             if value.nil?
@@ -109,7 +112,6 @@ module PryState
               colk = "red"
             else
               value = stringify(value)
-              
               if it_should_be_truncated? var, value
                 new_length = @config.right_column_width - 4
                 val_format = "%-#{new_length}.#{new_length}s..."
@@ -162,11 +164,6 @@ module PryState
 
       attr_reader :binding, :pry
 
-
-      def value_changed? var, value
-        return nil if @config[:pry_state_prev].empty?
-        @config.prev[var] != value
-      end
     end
 
   end
