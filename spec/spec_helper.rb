@@ -25,6 +25,7 @@ end.new(nil)
 RSpec.configure do |config|
   Pry.config.extra_sticky_locals = {}
   Pry.config.should_load_rc = false
+  Pry.config.should_load_local_rc = false
   Pry.config.pager = false
   config.include Pry::Testable::Mockable
   config.include Pry::Testable::Utility

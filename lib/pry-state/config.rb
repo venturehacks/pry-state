@@ -1,4 +1,3 @@
-warn "This config"
 module PryState
 
 

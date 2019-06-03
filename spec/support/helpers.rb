@@ -7,13 +7,15 @@ class << Pry
 
     Pry.color = false
     Pry.pager = false
-    Pry.config.should_load_rc      = false
-    Pry.config.should_load_plugins = false
-    Pry.config.history.should_load = false
-    Pry.config.history.should_save = false
-    Pry.config.auto_indent         = false
-    Pry.config.hooks               = Pry::Hooks.new
-    Pry.config.collision_warning   = false
+    Pry.config.should_load_rc       = false
+    Pry.config.should_load_local_rc = false
+    Pry.config.should_load_plugins  = false
+    Pry.config.history.should_load  = false
+    Pry.config.history.should_save  = false
+    Pry.config.auto_indent          = false
+    #Pry.config.hooks                = Pry::Hooks.new
+    Pry.config.collision_warning    = false
+    Pry.config.extra_sticky_locals = {}
   end
 end
 

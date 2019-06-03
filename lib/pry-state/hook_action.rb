@@ -25,15 +25,11 @@ module PryState
     IGNORABLE_GLOBAL_VARS = [:$@, :$-I, :"$\"", :$LOAD_PATH, :$KCODE, :$=, :$LOADED_FEATURES, :$:]
 
 
-    def initialize
+    def call( output, binding, pry )
       Pry.config.state_config = PryState::Config.new( 
         Pry.config.state_hook,
         truncate: Pry.config.state_truncate
       )
-    end
-
-
-    def call( output, binding, pry )
       if pry.config.state_config.enabled?
         PryState::Hook.run_hook output, binding, pry
       end

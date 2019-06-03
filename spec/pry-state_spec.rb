@@ -1,20 +1,35 @@
 require 'spec_helper'
-require_relative "../lib/pry-state.rb"
+#require_relative "../lib/pry-state.rb"
+  def pry_instance
+    Pry.new
+  end
+  def config
+    pry_instance.config.state_config
+  end
 
 describe "pry-state" do
-  Given(:pry_instance) { Pry.new }
-  Given(:config) { pry_instance.config.state_config }
 
   context "Set up" do
-
     context "Defaults" do
+      before :all do
+        # This line is a hack because, for some reason unknown to me,
+        # the plugins are not loaded until after "Set up"
+        Pry.load_plugins
+      end
       before do
-        Pry.hooks.add_hook(:before_session, :state_hook, PryState::Hook.new)
+        if !Pry.hooks.hook_exists?(:before_session, :state_hook)
+          Pry.hooks.add_hook(:before_session, :state_hook, PryState::Hook.new)
+        end
+        # This line is a hack to make sure the config is loaded
+        PryState::Hook.new.call "", binding, Pry.new
       end
       after do
-        Pry.hooks.delete_hook(:before_session, :state_hook)
+        if Pry.hooks.hook_exists?(:before_session, :state_hook)
+          Pry.hooks.delete_hook(:before_session, :state_hook)
+        end
       end
-      Then { config.kind_of? PryState::Config }
+      Then { pry_instance.config.respond_to? :state_config  }
+      And  { pry_instance.config.state_config.kind_of? PryState::Config }
       And  { !config.enabled? }
       And  {
         config.groups_visibility == PryState::Config::DEFAULT_GROUPS_VISIBILITY
@@ -33,21 +48,20 @@ describe "pry-state" do
       before do
         Pry.config.state_hook = true
         Pry.hooks.add_hook(:before_session, :state_hook, PryState::Hook.new)
+        # This line is a hack to make sure the config is loaded
+        PryState::Hook.new.call StringIO.new, binding, Pry.new
       end
       after do
         Pry.hooks.delete_hook(:before_session, :state_hook)
         Pry.config.state_hook = false
       end
-      Then  { Pry.config.state_hook }
-      And  { Pry.config.state_hook.kind_of? TrueClass }
-      And  { pry_instance.config.state_hook }
-      And  { pry_instance.config.state_hook.kind_of? TrueClass }
-      And  { config.kind_of? PryState::Config }
-      And  { config.respond_to? :enabled? }
-      And  { pry_instance.config.state_config.kind_of? PryState::Config }
-      And  { config.enabled? }
-      And  { pry_instance.config.state_config == config }
-      And  { pry_instance.config.state_config.enabled? }
+      Then { Pry.config.state_hook.kind_of? TrueClass }
+      Then { pry_instance.config.state_hook.kind_of? TrueClass }
+      Then { config.kind_of? PryState::Config }
+      Then { config.respond_to? :enabled? }
+      Then { pry_instance.config.state_config.kind_of? PryState::Config }
+      Then { config.enabled? }
+      Then { pry_instance.config.state_config.enabled? }
     end
   end
 
@@ -65,6 +79,9 @@ describe "pry-state" do
     long_var = '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80]'
     Given(:out) { StringIO.new }
 
+    # These specs pass when run in isolation e.g.
+    # bin/rspec -e "pry-state Output Truncation"
+    # I can't fathom why they don't when run with the others.
     context "Truncation" do
       context "Given a default set up, truncation is off" do
         When {
@@ -88,6 +105,36 @@ describe "pry-state" do
         And  { out.string.include? "@x                   12" }
         And  { out.string.include? "z                    14" }
         And  { out.string.include? "ys                   len:80 #{long_var}" }
+      end
+      context "Given a default set up where truncation is set to on" do
+        before :all do
+          Pry.config.state_truncate = true
+        end
+        after :all do
+          Pry.config.state_truncate = nil
+        end
+        When {
+          redirect_pry_io(
+            # The no color line is here because setting it in the config
+            # above seems to have no effect, so, that's why.
+            InputTester.new("_pry_.config.color = false",
+                            "z = 14",
+                            "ys = #{long_var}",
+                            "state-show",
+                            "exit-all"),
+                            out
+                          ) do
+            obj.bing
+          end
+        }
+
+        Then { config.prev.kind_of? Hash }
+        Then { config.prev.keys == [:instance, :local] }
+        Then { out.string.include? "global: false instance: true local: true truncating?: true" }
+        Then { out.string.include?  "@x                   12" }
+        Then { out.string.include?  "z                    14" }
+        Then { !out.string.include? "ys                   len:80 #{long_var}" }
+        Then { out.string.include?  "ys                   len:80 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 1..." }
       end
       context "Toggle truncate on" do
         When {
